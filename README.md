@@ -1,16 +1,29 @@
 # mcDETECT-tutorial
 
-Published documentation for the **[mcDETECT](https://github.com/chen-yang-yuan/mcDETECT)** MERSCOPE tutorial (Markdown sources live in that repo under `tutorial/`).
+Published **[Read the Docs](https://readthedocs.org/)** site for the **[mcDETECT](https://github.com/chen-yang-yuan/mcDETECT)** MERSCOPE tutorial.
 
-- **Read the Docs:** configure the project to use `.readthedocs.yaml` at the repository root and `docs/requirements.txt` for dependencies.
-- **Local build:**
+## Editing the tutorial
 
-  ```bash
-  python -m venv .venv && source .venv/bin/activate
-  pip install -r docs/requirements.txt
-  sphinx-build -b html docs docs/_build/html
-  ```
+**Source of truth:** Markdown under **`docs/tutorial_pages/`** in **this** repository (`README.md`, `01_*.md` …). Edit there, then commit and push **`main`**; Read the Docs rebuilds.
 
-  Open `docs/_build/html/index.html` in a browser.
+**Instructions (not shown on RTD):** [`maintainer/PUBLISHING_READTHEDOCS.md`](maintainer/PUBLISHING_READTHEDOCS.md)
 
-- **Sync from upstream:** run the GitHub Action **“Sync tutorial from mcDETECT”** (workflow dispatch), or copy `tutorial/*.md` from mcDETECT into `docs/tutorial_pages/` manually. See `docs/maintainers/sync_from_mcdetect.md`.
+## Local preview
+
+```bash
+make html          # Sphinx → docs/_build/html
+make open          # macOS: open index.html
+```
+
+Dependencies: `docs/requirements.txt` (installed automatically into `.venv` by `make html`).
+
+## Read the Docs
+
+Configuration: **`.readthedocs.yaml`** at the repo root, **`docs/requirements.txt`** for Python deps.
+
+## Makefile
+
+```bash
+make help          # list targets
+make push          # commit (if needed) and push origin main
+```

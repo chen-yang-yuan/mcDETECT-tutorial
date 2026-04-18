@@ -15,12 +15,4 @@ tutorial_pages/05_manual_subtyping
 tutorial_pages/06_density_wt_ad
 tutorial_pages/07_neuropil_subdomains
 tutorial_pages/08_checklist
-tutorial_pages/readthedocs_github_action
-```
-
-```{toctree}
-:maxdepth: 1
-:caption: Maintainer
-
-maintainers/sync_from_mcdetect
 ```

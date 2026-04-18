@@ -35,4 +35,4 @@ Dataset-specific coordinate transforms and multi-setting benchmark loops are omi
 | [07_neuropil_subdomains.md](./07_neuropil_subdomains.md) | Step F — Neuropil subdomains (Isocortex) |
 | [08_checklist.md](./08_checklist.md) | Quick reference checklist |
 
-**Read the Docs:** copy these files into the `mcDETECT-tutorial` repo (often `docs/tutorial_pages/`) and follow [readthedocs_github_action.md](./readthedocs_github_action.md) for a GitHub Actions sync workflow.
+**Contributors:** publishing workflow for this site (not part of the RTD build): **[`maintainer/PUBLISHING_READTHEDOCS.md`](https://github.com/chen-yang-yuan/mcDETECT-tutorial/blob/main/maintainer/PUBLISHING_READTHEDOCS.md)** in the **`mcDETECT-tutorial`** repository.
