@@ -1,6 +1,6 @@
 # mcDETECT Tutorial
 
-Published **[Read the Docs](https://readthedocs.org/)** site for the **[mcDETECT](https://github.com/chen-yang-yuan/mcDETECT)** MERSCOPE tutorial.
+Published **[Read the Docs](https://readthedocs.org/)** site for the **[mcDETECT](https://github.com/chen-yang-yuan/mcDETECT)** tutorial.
 
 ## Editing the tutorial
 
