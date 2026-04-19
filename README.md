@@ -1,12 +1,12 @@
-# mcDETECT-tutorial
+# mcDETECT Tutorial
 
 Published **[Read the Docs](https://readthedocs.org/)** site for the **[mcDETECT](https://github.com/chen-yang-yuan/mcDETECT)** MERSCOPE tutorial.
 
 ## Editing the tutorial
 
-**Source of truth:** Markdown under **`docs/tutorial_pages/`** in **this** repository (`README.md`, `01_*.md` …). Edit there, then commit and push **`main`**; Read the Docs rebuilds.
+**Source of truth:** Markdown under `**docs/tutorial_pages/`** in **this** repository (`README.md`, `01_*.md` …). Edit there, then commit and push `**main`**; Read the Docs rebuilds.
 
-**Instructions (not shown on RTD):** [`maintainer/PUBLISHING_READTHEDOCS.md`](maintainer/PUBLISHING_READTHEDOCS.md)
+**Instructions (not shown on RTD):** `[maintainer/PUBLISHING_READTHEDOCS.md](maintainer/PUBLISHING_READTHEDOCS.md)`
 
 ## Local preview
 
@@ -19,7 +19,7 @@ Dependencies: `docs/requirements.txt` (installed automatically into `.venv` by `
 
 ## Read the Docs
 
-Configuration: **`.readthedocs.yaml`** at the repo root, **`docs/requirements.txt`** for Python deps.
+Configuration: `**.readthedocs.yaml**` at the repo root, `**docs/requirements.txt**` for Python deps.
 
 ## Makefile
 
@@ -27,3 +27,4 @@ Configuration: **`.readthedocs.yaml`** at the repo root, **`docs/requirements.tx
 make help          # list targets
 make push          # commit (if needed) and push origin main
 ```
+
