@@ -1,4 +1,4 @@
-# mcDETECT tutorial
+# mcDETECT Tutorial
 
 MERSCOPE-focused walkthrough: `mcDETECT` setup, granule detection, profiling, manual subtyping, WT vs AD density, and Isocortex neuropil subdomains.
 
