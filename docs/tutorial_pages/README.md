@@ -2,17 +2,19 @@
 
 This tutorial follows the repository workflow for **MERSCOPE** data: transcript-based **`mcDETECT`** setup → granule detection → expression profiling → **manual** granule subtyping → **WT vs AD granule density** comparison → **Isocortex neuropil subdomain** analysis on a **50×50** grid with **hard** embeddings, **row-normalized** subtype vectors, and **K-Means with k = 4**.
 
-**Primary references:** `mcDETECT_package/mcDETECT/model.py`, `code/3_detection.py`, `code/benchmark/benchmark_subtyping.ipynb`, `code/7_neuropil_subdomains.ipynb`.
+**Package version:** mcDETECT **v2.1.6**.
+
+**Primary references** (paths in the [mcDETECT repository](https://github.com/chen-yang-yuan/mcDETECT)): `mcDETECT_package/mcDETECT/model.py`, `mcDETECT_package/mcDETECT/downstream.py`, `code/3_detection.py`, `code/4_post_detection.ipynb`, `code/benchmark/benchmark_subtyping.ipynb`, `code/5_neuropil_subdomains_data.py`, `code/7_neuropil_subdomains.ipynb`.
 
 ---
 
 ## Analysis roadmap
 
-1. [**Prepare**](./01_what_mcdetect_expects.md) — transcript and auxiliary tables (coordinates, gene names, nucleus overlap, optional `cell_id`).
+1. [**Prepare**](./01_what_mcdetect_expects.md) — install mcDETECT; transcript and auxiliary tables (coordinates, gene names, nucleus overlap, optional `cell_id`).
 2. [**Initialize**](./02_construct_mcdetect.md) `mcDETECT` with platform type, marker lists, and numerical hyperparameters.
 3. [**Detect granules**](./03_granule_detection.md) — optional rough pass, then fine pass with filters.
-4. [**Profile**](./04_profile_granules.md) granules into an `AnnData` count matrix.
-5. [**Subtype manually**](./05_manual_subtyping.md) — normalize expression, k-means, heatmap, map clusters to biology, derive a simple mixed/pure label.
+4. [**Profile**](./04_profile_granules.md) granules into an `AnnData` count matrix and combine WT + AD.
+5. [**Subtype manually**](./05_manual_subtyping.md) — marker-gene k-means, heatmap, map clusters to biology, derive a simple mixed/pure label.
 6. [**Compare density**](./06_density_wt_ad.md) WT vs AD by brain region using spots as spatial units.
 7. [**Neuropil subdomains (Isocortex, 50×50)**](./07_neuropil_subdomains.md) — hard `spot_embedding`, row-wise normalization, K-Means **k = 4**.
 
