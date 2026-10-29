@@ -2,9 +2,17 @@
 
 [← Tutorial index](./README.md)
 
-The following is the setting used for the final results: **Isocortex**, **50×50** µm grids, **hard** `spot_embedding`, **row-normalized** subtype embedding, **K-Means with k = 4**. This page omits the other variants: soft embeddings, 25×25 grids, unnormalized embeddings, inertia/ARI sweeps, LDA/GMM/MiniBatch clustering, and **k = 5**.
+This page describes the settings used for the final results:
 
-### Step F1 — Region and grid constants
+- region: **Isocortex**;
+- spot size: **50 × 50 µm**;
+- each granule is assigned to exactly one spot (`spot_embedding`);
+- spots are described by the **proportion** of each granule subtype;
+- spots are clustered with **K-Means, k = 4**.
+
+The notebook also tries other options, such as 25 × 25 µm spots, other clustering methods, and k = 5. These are not covered here.
+
+### Step F1 — Region and grid settings
 
 ```python
 ROI = "Isocortex"
@@ -14,23 +22,23 @@ grid_len_num = 50
 
 ### Step F2 — Inputs (prepared by `5_neuropil_subdomains_data.py`)
 
-`5_neuropil_subdomains_data.py` places WT and AD in one shared coordinate frame. You need these objects:
+`5_neuropil_subdomains_data.py` moves the WT and AD samples into one shared coordinate system. You need these objects:
 
-- **`granule_adata`** — the combined granule object from [Step C5](./04_profile_granules.md) with **`granule_subtype_kmeans`** from [Step D](./05_manual_subtyping.md) in `obs` and raw counts in **`layers["counts"]`**.
+- **`granule_adata`** — the combined granule object from [Step C5](./04_profile_granules.md), with the **`granule_subtype_kmeans`** labels from [Step D](./05_manual_subtyping.md) in `obs` and raw counts in **`layers["counts"]`**.
 - **`adata`** — the combined cell-level `AnnData`.
-- **`spots`** — the combined WT + AD 50×50 spot `AnnData` for the Isocortex, with **`global_x`**, **`global_y`**, and **`layer_labels`** in `obs`.
-- **`count_matrix`** — a per-cell gene-count `DataFrame` with a **`cell_id`** column and gene columns aligned to **`granule_adata.var_names`**.
+- **`spots`** — the combined WT + AD 50 × 50 µm spots in the Isocortex, with **`global_x`**, **`global_y`**, and **`layer_labels`** in `obs`.
+- **`count_matrix`** — a table of gene counts per cell, with a **`cell_id`** column and gene columns in the same order as **`granule_adata.var_names`**.
 
-**Neurons for soma features:**
+**Select neurons** (used to count neurons per spot):
 
 ```python
 adata_neuron = adata[adata.obs["brain_area"].str.startswith(ROI)
                      & adata.obs["cell_type"].isin(["GABAergic", "Glutamatergic"])].copy()
 ```
 
-### Step F3 — Hard embedding (`spot_embedding`)
+### Step F3 — Count granule subtypes per spot (`spot_embedding`)
 
-Call **`spot_embedding`** from **`mcDETECT.downstream`** with hard assignment to 50×50 windows, Gaussian smoothing, and soma features:
+Call **`spot_embedding`** from **`mcDETECT.downstream`**. Here it assigns each granule and neuron to one 50 × 50 µm spot, smooths the subtype counts across neighboring spots, and also counts neurons:
 
 ```python
 import numpy as np
@@ -61,14 +69,14 @@ for aux_key, aux_val in aux_features.items():
     spots.obs[aux_key] = aux_val
 ```
 
-**What each output contains:**
+**What the outputs contain:**
 
-- **Assignment:** each granule (and each neuron) goes to **one** spot, the one whose `spot_width × spot_height` square around the center contains it.
-- **`embeddings`** — `n_spots × K` array of granule counts per **k-means cluster** (one column per `subtype_names` entry). With `smoothing=True`, only this matrix is smoothed: each spot becomes a Gaussian-weighted average of the spots within `smoothing_radius`, which here means the spot and its 8 neighbors.
-- **`aux_features`** — `granule_count` and `soma_count` per spot.
-- **`spot_granule_expression`** / **`spot_cell_expression`** — spot × gene sums of granule and neuron raw counts.
+- **Spot assignment:** each granule (and each neuron) is assigned to the one spot whose 50 × 50 µm square contains it.
+- **`embeddings`** — a matrix with one row per spot and one column per k-means cluster, giving the number of granules of each cluster in the spot. With `smoothing=True`, only this matrix is smoothed. Each spot's counts are replaced by a weighted average of its own counts and those of its 8 surrounding spots, with closer spots weighted more.
+- **`aux_features`** — the number of granules (`granule_count`) and neurons (`soma_count`) in each spot.
+- **`spot_granule_expression`** / **`spot_cell_expression`** — gene counts per spot, summed over the granules and over the neurons in that spot.
 
-### Step F4 — Drop spots without granules
+### Step F4 — Remove spots without granules
 
 ```python
 mask = (spots.obs["granule_count"] > 0).to_numpy()
@@ -78,9 +86,9 @@ spot_granule_expression = spot_granule_expression[mask].copy()
 spot_cell_expression = spot_cell_expression[mask].copy()
 ```
 
-### Step F5 — Row-normalize the embedding
+### Step F5 — Convert counts to proportions
 
-Normalize **each row** of **`embeddings`** to sum to 1, giving the subtype composition of each spot:
+Divide each row of **`embeddings`** by its sum, so each spot is described by the proportion of granules in each subtype:
 
 ```python
 row_sums = embeddings.sum(axis=1, keepdims=True)
@@ -98,12 +106,12 @@ kmeans_labels = kmeans.fit_predict(X)
 spots.obs["subdomain_kmeans"] = [f"Subdomain {l + 1}" for l in kmeans_labels]
 ```
 
-The full notebook optionally **relabels** the subdomains so their order is consistent across figures; this is cosmetic.
+The notebook also renumbers the subdomains so that they appear in the same order in all figures. This does not change the clustering.
 
-### Step F7 — Visualization and follow-ups (optional)
+### Step F7 — Visualization and follow-up analyses (optional)
 
-- **Spatial maps:** scatter of `spots` (`global_x`, `global_y`) colored by **`subdomain_kmeans`**.
-- **Composition heatmap:** the mean of **`X`** per subdomain × granule cluster, showing which granule subtypes define each subdomain.
-- **Differential expression between subdomains:** build an `AnnData` from `spot_granule_expression` or `spot_cell_expression`, apply `normalize_total` and `log1p`, and run `sc.tl.rank_genes_groups` (the notebook uses `method="wilcoxon"` for Subdomain 1 vs Subdomain 2).
+- **Spatial map:** plot the spots (`global_x`, `global_y`) colored by **`subdomain_kmeans`**.
+- **Subtype heatmap:** plot the average of **`X`** for each subdomain and granule cluster, to see which granule subtypes characterize each subdomain.
+- **Differential expression between subdomains:** make an `AnnData` from `spot_granule_expression` or `spot_cell_expression`, run `normalize_total` and `log1p`, then run `sc.tl.rank_genes_groups`. The notebook compares Subdomain 1 with Subdomain 2 using `method="wilcoxon"`.
 
 **Next:** [Quick reference checklist](./08_checklist.md)

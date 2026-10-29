@@ -2,11 +2,11 @@
 
 [← Tutorial index](./README.md)
 
-The main result is annotated **manually**: k-means on marker-gene expression, a heatmap, then a hand-written mapping from clusters to biology. The package also has a rule-based classifier (`mcDETECT.downstream.classify_granules` / `GranuleSubtyper`). The notebook uses it only to tune automatic labels against the manual ones, so it is not covered here.
+In the main analysis, granule subtypes are assigned **manually**. Granules are first clustered by their marker-gene expression with k-means. The marker expression of each cluster is then shown in a heatmap, and each cluster is given a biological label by hand. The package also provides an automatic, rule-based classifier (`mcDETECT.downstream.classify_granules` / `GranuleSubtyper`). The notebook uses it only to compare automatic labels with the manual ones, so it is not covered here.
 
 ### Step D1 — Load and normalize
 
-Start from the combined WT + AD object from [Step C5](./04_profile_granules.md). It is already normalized (`normalize_total(target_sum=1e4)` → `log1p`), with raw counts in `layers["counts"]`. Rename the sample column and keep only the reference marker genes:
+Start from the combined WT + AD object from [Step C5](./04_profile_granules.md). It is already normalized (`normalize_total(target_sum=1e4)` followed by `log1p`), and the raw counts are in `layers["counts"]`. Rename the sample column and keep only the marker genes:
 
 ```python
 import scanpy as sc
@@ -21,11 +21,11 @@ granule_adata.obs["sample_simple"] = granule_adata.obs["sample"].replace({"MERSC
 granule_adata = granule_adata[:, ref_genes].copy()
 ```
 
-If you start from raw per-sample profiles instead, concatenate WT and AD and restrict them to the shared marker genes. Then store `layers["counts"]` and apply `sc.pp.normalize_total(target_sum=1e4)` and `sc.pp.log1p` before clustering.
+If you start instead from separate raw count objects for each sample, first combine WT and AD and keep only the marker genes present in both. Then save the raw counts in `layers["counts"]` and run `sc.pp.normalize_total(target_sum=1e4)` and `sc.pp.log1p` before clustering.
 
 ### Step D2 — MiniBatch k-means
 
-The main result uses **`n_clusters=15`**, **`seed=1`**, **`batch_size=5000`**, **`n_init=20`**, fit on the log-normalized marker matrix (densified if sparse):
+The main analysis uses **`n_clusters=15`**, **`seed=1`**, **`batch_size=5000`**, and **`n_init=20`**. Clustering is run on the normalized marker-gene expression:
 
 ```python
 import numpy as np
@@ -50,18 +50,18 @@ def run_manual_subtyping(granule_adata, n_clusters, seed, batch_size=5000, n_ini
 granule_adata = run_manual_subtyping(granule_adata, n_clusters=15, seed=1)
 ```
 
-**Output:** **`obs["granule_subtype_kmeans"]`** — string cluster ids `"0"` … `"14"`. Cluster ids depend on the seed, so the mapping in Step D4 is only valid for the same data, seed, and settings.
+**Output:** **`obs["granule_subtype_kmeans"]`**, with cluster numbers `"0"` to `"14"` stored as text. The cluster numbers change with the random seed. The labels in Step D4 therefore apply only to this data with this seed and these settings.
 
-### Step D3 — Heatmap-driven biology
+### Step D3 — Interpret clusters with a heatmap
 
-Plot the marker genes per cluster and decide which clusters look pre-synaptic, post-synaptic, dendritic, or mixed:
+Plot the marker-gene expression of each cluster. Use it to decide whether each cluster looks pre-synaptic, post-synaptic, dendritic, or mixed:
 
 ```python
 sc.pl.heatmap(granule_adata, var_names=ref_genes, groupby="granule_subtype_kmeans",
               cmap="Reds", standard_scale="var", dendrogram=False, swap_axes=True)
 ```
 
-The notebook groups the markers as follows:
+The notebook groups the marker genes as follows:
 
 | Category | Markers |
 |----------|---------|
@@ -70,9 +70,9 @@ The notebook groups the markers as follows:
 | dendrites | Actb, Cyfip2, Ddn, Dlg4, Map1a, Map2 |
 | axons | Ank3, Nav1, Sptnb4, Nfasc, Mapt, Tubb3 |
 
-### Step D4 — Manual mapping dictionary
+### Step D4 — Assign labels to clusters
 
-Build a **`mapping`** from subtype names to **lists of cluster id strings**, then apply it:
+Write a dictionary (**`mapping`**) that lists, for each subtype name, the cluster numbers that belong to it. Then apply it:
 
 ```python
 def apply_manual_annotation(granule_adata, mapping, cluster_column="granule_subtype_kmeans"):
@@ -86,7 +86,7 @@ def apply_manual_annotation(granule_adata, mapping, cluster_column="granule_subt
     )
     return granule_adata
 
-# Main result (seed = 1)
+# Main analysis (seed = 1)
 mapping = {
     "pre-syn": ["0", "11", "12", "13"],
     "post-syn": ["1", "2", "3"],
@@ -101,10 +101,10 @@ mapping = {
 granule_adata = apply_manual_annotation(granule_adata, mapping)
 ```
 
-**Convention:** finer labels live in **`granule_subtype_manual`** (e.g. `"pre & post"`); **`granule_subtype_manual_simple`** collapses any label containing **`" & "`** to **`"mixed"`** and is used for density and summaries.
+**Two label columns:** **`granule_subtype_manual`** holds the detailed labels (e.g. `"pre & post"`). **`granule_subtype_manual_simple`** replaces every label that contains **`" & "`** with **`"mixed"`**. The simple labels are used for density comparisons and summaries.
 
 ### Step D5 — Save labels
 
-Save the `obs` columns `granule_id`, `sample`, `granule_subtype_kmeans`, `granule_subtype_manual`, and `granule_subtype_manual_simple` (e.g. to Parquet). [Step F](./07_neuropil_subdomains.md) needs `granule_subtype_kmeans` on the granule object.
+Save the `obs` columns `granule_id`, `sample`, `granule_subtype_kmeans`, `granule_subtype_manual`, and `granule_subtype_manual_simple`, for example as a Parquet file. [Step F](./07_neuropil_subdomains.md) needs the `granule_subtype_kmeans` column in the granule object.
 
 **Next:** [Step E — WT vs AD density](./06_density_wt_ad.md)

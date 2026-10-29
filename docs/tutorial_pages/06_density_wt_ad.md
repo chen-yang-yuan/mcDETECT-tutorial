@@ -2,44 +2,54 @@
 
 [← Tutorial index](./README.md)
 
-This step assumes each granule has **`granule_subtype_manual_simple`**, a **sample** column (`"WT"` / `"AD"`, e.g. `sample_simple` from [Step D1](./05_manual_subtyping.md)), and coordinates in the **same frame as that sample's spots**. The helpers use **`global_x` / `global_y`** in `obs` (after `profile`) and fall back to `sphere_x` / `sphere_y`.
+For this step, each granule needs:
 
-### Step E1 — Spatial reference: spots per sample
+- a subtype label, **`granule_subtype_manual_simple`**;
+- a **sample** label (`"WT"` or `"AD"`, e.g. `sample_simple` from [Step D1](./05_manual_subtyping.md));
+- coordinates in the **same coordinate system as that sample's spots**.
 
-Load **`spots.h5ad`** for WT and AD separately. Each must have **`brain_area`** and spot centers **`global_x`**, **`global_y`** in `obs`. Pass each sample's granules together with **that sample's** spots, so coordinates are never mixed across sections.
+The functions below read the coordinates from **`global_x` / `global_y`** in `obs` (the names used after `profile`). If those columns are missing, they use `sphere_x` / `sphere_y`.
 
-### Step E2 — Density definition (50 µm windows)
+### Step E1 — Load the spots for each sample
 
-The notebook helper **`compute_subtype_density_per_region(granule_obs, spots, subtype_col="granule_subtype_manual_simple", sample_col=..., grid_len=50)`** works as follows:
+Load **`spots.h5ad`** for WT and AD separately. Each spot table must contain **`brain_area`** and the spot center coordinates **`global_x`** and **`global_y`** in `obs`. Always pair each sample's granules with **that sample's** spots, so that coordinates from different tissue sections are never mixed.
 
-- For each **sample**, each **brain_area**, and each **subtype** (plus an **`"overall"`** row for all granules):
-  - For every spot in that area, it counts granules whose (x, y) lies in the half-open square `[x − 25, x + 25) × [y − 25, y + 25)` around the spot center (half-width `grid_len / 2`).
-  - **Density** = (sum of those counts) / (**number of spots** in that brain area).
+### Step E2 — How density is defined (50 µm spots)
 
-Density is therefore the mean number of granules per 50 × 50 µm spot, not a volume density.
+The notebook function **`compute_subtype_density_per_region(granule_obs, spots, subtype_col="granule_subtype_manual_simple", sample_col=..., grid_len=50)`** computes density as follows:
+
+- It works on each combination of **sample**, **brain region**, and **subtype**. It also adds an **`"overall"`** row that includes all granules.
+  - For each spot in the region, it counts the granules that fall inside the 50 × 50 µm square centered on that spot.
+  - **Density** = total count over all spots in the region / **number of spots** in the region.
+
+Density is therefore the average number of granules per 50 × 50 µm spot. It is not a density per unit volume.
 
 ```python
 density_wt = compute_subtype_density_per_region(obs_wt, spots_wt, sample_col="sample_simple")
 density_ad = compute_subtype_density_per_region(obs_ad, spots_ad, sample_col="sample_simple")
 ```
 
-### Step E3 — AD capture-efficiency correction
+### Step E3 — Correct AD for capture efficiency
 
-The notebook divides **AD** densities and AD per-spot counts by a fixed factor before any comparison:
+Before comparing the samples, the notebook divides the AD densities, and the AD per-spot counts, by a fixed factor:
 
 ```python
 CAPTURE_EFFICIENCY_COEF = 0.818691
 density_ad["density"] = density_ad["density"] / CAPTURE_EFFICIENCY_COEF
 ```
 
-Adjust or omit this if your study does not use the calibration.
+Change or skip this correction if your study does not use it.
 
 ### Step E4 — Per-spot counts and statistics
 
-**`compute_subtype_per_spot_counts`** takes the same arguments and returns one row per (sample, brain_area, subtype, spot) with that spot's granule count. The notebook uses these per-spot counts for a **bootstrap 95% CI** of mean density and a two-sample **t-test** (`scipy.stats.ttest_ind`) on **`log1p(count)`** between WT and AD per (brain_area, subtype). It then applies **Bonferroni** and **Benjamini–Hochberg FDR** correction.
+**`compute_subtype_per_spot_counts`** takes the same arguments. It returns the granule count of every spot, with one row per sample, brain region, subtype, and spot. The notebook uses these per-spot counts in three ways:
+
+- a **bootstrap 95% confidence interval** for the mean density;
+- a two-sample **t-test** (`scipy.stats.ttest_ind`) on **`log1p(count)`**, comparing WT and AD for each brain region and subtype;
+- **Bonferroni** and **Benjamini–Hochberg (FDR)** correction for multiple testing.
 
 ### Step E5 — Export
 
-Save the density table (one row per sample, brain_area, and subtype, with density, CI, and p-values) as CSV alongside the subtype labels from [Step D5](./05_manual_subtyping.md).
+Save the density table as a CSV file, with one row per sample, brain region, and subtype, and columns for density, confidence interval, and p-values. Keep it with the subtype labels from [Step D5](./05_manual_subtyping.md).
 
 **Next:** [Step F — Neuropil subdomains](./07_neuropil_subdomains.md)

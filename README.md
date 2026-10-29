@@ -4,9 +4,9 @@ Source for the **[mcDETECT tutorial](https://mcdetect-tutorial.readthedocs.io/en
 
 ## Editing the tutorial
 
-**Source of truth:** Markdown under `docs/tutorial_pages/` in **this** repository (`README.md`, `01_*.md` …). Edit there, then commit and push `main`; Read the Docs rebuilds.
+The tutorial pages are the Markdown files in `docs/tutorial_pages/` in this repository (`README.md`, `01_*.md`, …). Edit them there, then commit and push to `main`. Read the Docs then rebuilds the website automatically.
 
-**Instructions (not shown on RTD):** [maintainer/PUBLISHING_READTHEDOCS.md](maintainer/PUBLISHING_READTHEDOCS.md)
+**Publishing instructions (not shown on the website):** [maintainer/PUBLISHING_READTHEDOCS.md](maintainer/PUBLISHING_READTHEDOCS.md)
 
 ## Local preview
 
@@ -19,7 +19,7 @@ Dependencies: `docs/requirements.txt` (installed automatically into `.venv` by `
 
 ## Read the Docs
 
-Configuration: `.readthedocs.yaml` at the repo root, `docs/requirements.txt` for Python deps.
+The build is configured in `.readthedocs.yaml` (in the repository root). The required Python packages are listed in `docs/requirements.txt`.
 
 ## Makefile
 
